@@ -16,24 +16,20 @@ const client = new Client({
 // Commands collection
 client.commands = new Collection();
 
-// Load commands (if you have a commands folder)
+// Load commands
+// Load commands
 const foldersPath = path.join(__dirname, 'commands');
 if (fs.existsSync(foldersPath)) {
-    const commandFolders = fs.readdirSync(foldersPath);
+    const commandFiles = fs.readdirSync(foldersPath).filter(file => file.endsWith('.js'));
     
-    for (const folder of commandFolders) {
-        const commandsPath = path.join(foldersPath, folder);
-        const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) {
+        const filePath = path.join(foldersPath, file);
+        const command = require(filePath);
         
-        for (const file of commandFiles) {
-            const filePath = path.join(commandsPath, file);
-            const command = require(filePath);
-            
-            if ('data' in command && 'execute' in command) {
-                client.commands.set(command.data.name, command);
-            } else {
-                console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
-            }
+        if ('data' in command && 'execute' in command) {
+            client.commands.set(command.data.name, command);
+        } else {
+            console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
         }
     }
 }
@@ -82,6 +78,12 @@ client.on(Events.InteractionCreate, async interaction => {
         }
     }
 });
+
+require('dotenv').config();
+
+// Add this line to debug - remove after testing
+console.log('Token loaded:', process.env.DISCORD_TOKEN ? 'Yes' : 'No');
+console.log('Token length:', process.env.DISCORD_TOKEN?.length || 0);
 
 // Express server for Vercel
 const app = express();
